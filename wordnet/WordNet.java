@@ -23,32 +23,30 @@ public class WordNet {
             throw new IllegalArgumentException("arguments to constructor cannot be null");
         In synIn = new In(synsets);
         In hypIn = new In(hypernyms);
-        int countWords = 0;
+        int synsetCount = 0;
         while (!synIn.isEmpty()) {
             String line = synIn.readLine();
             String[] output = line.split(",");
             int v = Integer.parseInt(output[0]);
             String synset = output[1];
-            nouns.put(synset, v);
+            nouns.put(synset, v); // rong. Need to space separate output[1] to get nouns
             vertices.put(v, synset);
-            countWords++;
+            synsetCount++;
         }
-        d = new Digraph(countWords);
+        d = new Digraph(synsetCount);
         while (!hypIn.isEmpty()) {
             String line = hypIn.readLine();
             String[] output = line.split(",");
             int v = Integer.parseInt(output[0]);
-            if (output.length > 1) {
-                for (int i = 0; i < output.length; i++) {
-                    // create edge v -> w, i.e., from v to its hypernym(s) output[i]
-                    d.addEdge(v, Integer.parseInt(output[i]));
-                }
+            for (int i = 1; i < output.length; i++) {
+                // create edge v -> w, i.e., from v to its hypernym(s) output[i]
+                d.addEdge(v, Integer.parseInt(output[i]));
             }
             // else if (output.length == 1) this.root = v;
         }
         // check whether valid roooted DAG: TODO - call Topological hasOrder() method if I can get it to work
         int outdegreeZeroCount = 0;
-        for (int i = 0; i < countWords; i++) {
+        for (int i = 0; i < synsetCount; i++) {
             int outdegree = d.outdegree(i);
             if (outdegree == 0) {
                 this.root = i;
@@ -88,7 +86,7 @@ public class WordNet {
         Topological topo = new Topological(this.d);
         StdOut.println("topo " + topo.hasOrder());
         StdOut.println("rank 4 " + topo.rank(4));
-        return "grump";
+        return "nagpoke";
     }
 
     public static void main(String[] args) {
