@@ -2537,7 +2537,7 @@
 2536,immunoglobulin_D IgD,one of the five major classes of immunoglobulins; present in blood serum in small amounts  
 2537,immunoglobulin_E IgE,one of the five major classes of immunoglobulins; present primarily in the skin and mucous membranes  
 2538,immunoglobulin_G IgG,one of the five major classes of immunoglobulins; the main antibody defense against bacteria  
-2539,immunoglobulin_M IgM,one of the five major classes of immunoglobulins; involved in fighting blood infections and in triggering production of immunoglobulin G  
+2539,immunoglobulin_M IgM,one of the five major classes of immunoglobulins; involved in fighting blood infections and in triggering production of immunoglobulin digraph
 2540,impact wallop,a forceful consequence; a strong effect; "the book had an important impact on my thinking"; "the book packs a wallop"  
 2541,imperforate_anus,a congenital defect of the anus; there is partial or complete obstruction of the anal opening  
 2542,imperforate_hymen,hymen that is completely closed so that menstrual blood cannot flow out  

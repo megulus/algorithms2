@@ -233,7 +233,7 @@
 232,immunoglobulin_D IgD,one of the five major classes of immunoglobulins; present in blood serum in small amounts  
 233,immunoglobulin_E IgE,one of the five major classes of immunoglobulins; present primarily in the skin and mucous membranes  
 234,immunoglobulin_G IgG,one of the five major classes of immunoglobulins; the main antibody defense against bacteria  
-235,immunoglobulin_M IgM,one of the five major classes of immunoglobulins; involved in fighting blood infections and in triggering production of immunoglobulin G  
+235,immunoglobulin_M IgM,one of the five major classes of immunoglobulins; involved in fighting blood infections and in triggering production of immunoglobulin digraph
 236,infliximab Remicade,a monoclonal antibody (trade name Remicade) used to treat Crohn's disease and rheumatoid arthritis; administered by infusion; use and dosage must be determined by a physician  
 237,interleukin,any of several lymphokines that promote macrophages and killer T cells and B cells and other components of the immune system  
 238,internode,a segment of a stem between two nodes  

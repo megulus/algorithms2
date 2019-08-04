@@ -407,7 +407,7 @@
 406,immunoglobulin_D IgD,one of the five major classes of immunoglobulins; present in blood serum in small amounts  
 407,immunoglobulin_E IgE,one of the five major classes of immunoglobulins; present primarily in the skin and mucous membranes  
 408,immunoglobulin_G IgG,one of the five major classes of immunoglobulins; the main antibody defense against bacteria  
-409,immunoglobulin_M IgM,one of the five major classes of immunoglobulins; involved in fighting blood infections and in triggering production of immunoglobulin G  
+409,immunoglobulin_M IgM,one of the five major classes of immunoglobulins; involved in fighting blood infections and in triggering production of immunoglobulin digraph
 410,imperforate_hymen,hymen that is completely closed so that menstrual blood cannot flow out  
 411,incisor,a tooth for cutting or gnawing; located in the front of the mouth in both jaws  
 412,incus anvil,the ossicle between the malleus and the stapes  

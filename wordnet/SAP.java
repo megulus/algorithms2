@@ -30,10 +30,34 @@ public class SAP {
     }
 
     // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
-    // public int length(Iterable<Integer> v, Iterable<Integer> w)
+    public int length(Iterable<Integer> v, Iterable<Integer> w) {
+        int shortestPathSoFar = Integer.MAX_VALUE;
+        for (int vertexA : v) {
+            for (int vertexB : w) {
+                int pathLength = mbfs.sap(vertexA, vertexB);
+                if (pathLength < shortestPathSoFar) {
+                    shortestPathSoFar = pathLength;
+                }
+            }
+        }
+        return shortestPathSoFar;
+    }
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
-    // public int ancestor(Iterable<Integer> v, Iterable<Integer> w)
+    public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
+        int bestAncestorSoFar = -1;
+        int shortestPathSoFar = Integer.MAX_VALUE;
+        for (int vertexA : v) {
+            for (int vertexB : w) {
+                int pathLength = mbfs.sap(vertexA, vertexB);
+                if (pathLength < shortestPathSoFar) {
+                    shortestPathSoFar = pathLength;
+                    bestAncestorSoFar = mbfs.ancestor(vertexA, vertexB);
+                }
+            }
+        }
+        return bestAncestorSoFar;
+    }
 
 
     public static void main(String[] args) {
@@ -41,10 +65,7 @@ public class SAP {
         int v = Integer.parseInt(args[1]);
         int w = Integer.parseInt(args[2]);
         Digraph G = new Digraph(in);
-        StdOut.println(" G: " + G.toString());
-        // Topological topo = new Topological(G);
-        // StdOut.println("topo hasOrder() " + topo.hasOrder());
-        // StdOut.println("topo sort " + topo.order());
+        StdOut.println(" digraph: " + G.toString());
         SAP sap = new SAP(G);
         int length = sap.length(v, w);
         int ancestor = sap.ancestor(v, w);
@@ -54,44 +75,39 @@ public class SAP {
     private class ModifiedBFS {
         private static final int INFINITY = Integer.MAX_VALUE;
 
-        private boolean[] markedA;
-        private boolean[] markedB;
+        private Digraph digraph;
 
-        private int[] distToA;
-        private int[] distToB;
-
-        private int ancestor = -1;
-        private int sap = -1;
-
-        private Digraph G;
-
-        public ModifiedBFS(Digraph G) {
-            this.G = G;
-            markedA = new boolean[G.V()];
-            markedB = new boolean[G.V()];
-            distToA = new int[G.V()];
-            distToB = new int[G.V()];
-            for (int i = 0; i < G.V(); i++) {
-                distToA[i] = INFINITY;
-                distToB[i] = INFINITY;
-            }
+        public ModifiedBFS(Digraph digraph) {
+            this.digraph = digraph;
         }
 
         public int ancestor(int v, int w) {
-            bfs(v, w);
-            return this.ancestor;
+            return bfs(v, w)[0];
         }
 
         public int sap(int v, int w) {
-            bfs(v, w);
-            return this.sap;
+            return bfs(v, w)[1];
         }
 
-        private void bfs(int v, int w) {
+        private int[] bfs(int v, int w) {
             validateVertex(v);
             validateVertex(w);
             Queue<Integer> qA = new Queue<>();
             Queue<Integer> qB = new Queue<>();
+
+            int ancestor = -1;
+            int sap = -1;
+
+            boolean[] markedA = new boolean[digraph.V()];
+            boolean[] markedB = new boolean[digraph.V()];
+            int[] distToA = new int[digraph.V()];
+            int[] distToB = new int[digraph.V()];
+            for (int i = 0; i < digraph.V(); i++) {
+                distToA[i] = INFINITY;
+                distToB[i] = INFINITY;
+            }
+
+
             markedA[v] = true;
             distToA[v] = 0;
             markedB[w] = true;
@@ -99,39 +115,41 @@ public class SAP {
             qA.enqueue(v);
             qB.enqueue(w);
             while (!qA.isEmpty()) {
-                int a = qA.dequeue();
-                for (int n : G.adj(a)) {
-                    if (!markedA[n]) {
-                        distToA[n] = distToA[a] + 1;
-                        markedA[n] = true;
-                        qA.enqueue(n);
+                int currentAVertex = qA.dequeue();
+                for (int parentVertex : digraph.adj(currentAVertex)) {
+                    if (!markedA[parentVertex]) {
+                        distToA[parentVertex] = distToA[currentAVertex] + 1;
+                        markedA[parentVertex] = true;
+                        qA.enqueue(parentVertex);
                     }
                 }
             }
             int shortestSoFar = INFINITY;
             while (!qB.isEmpty()) {
 
-                int b = qB.dequeue();
-                for (int m : G.adj(b)) {
-                    if (!markedB[m]) {
-                        distToB[m] = distToB[b] + 1;
-                        markedB[m] = true;
-                        if (markedA[m]) {
-                            if (distToA[m] + distToB[m] < shortestSoFar) {
-                                shortestSoFar = distToA[m] + distToB[m];
-                                this.ancestor = m;
-                                this.sap = shortestSoFar;
+                int currentBVertex = qB.dequeue();
+                for (int parentVertex : digraph.adj(currentBVertex)) {
+                    if (!markedB[parentVertex]) {
+                        distToB[parentVertex] = distToB[currentBVertex] + 1;
+                        markedB[parentVertex] = true;
+                        if (markedA[parentVertex]) {
+                            if (distToA[parentVertex] + distToB[parentVertex] < shortestSoFar) {
+                                shortestSoFar = distToA[parentVertex] + distToB[parentVertex];
+                                ancestor = parentVertex;
+                                sap = shortestSoFar;
                             }
                         }
-                        qB.enqueue(m);
+                        qB.enqueue(parentVertex);
                     }
                 }
             }
+
+            return new int[] { ancestor, sap };
         }
 
         private void validateVertex(int s) {
-            if (s < 0 || s >= this.G.V()) throw new IllegalArgumentException(
-                    "vertex " + s + " is not between 0 and " + (this.G.V() - 1));
+            if (s < 0 || s >= this.digraph.V()) throw new IllegalArgumentException(
+                    "vertex " + s + " is not between 0 and " + (this.digraph.V() - 1));
         }
 
     }
