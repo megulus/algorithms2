@@ -132,16 +132,21 @@ public class SAP {
                     if (!markedB[parentVertex]) {
                         distToB[parentVertex] = distToB[currentBVertex] + 1;
                         markedB[parentVertex] = true;
-                        if (markedA[parentVertex]) {
-                            if (distToA[parentVertex] + distToB[parentVertex] < shortestSoFar) {
-                                shortestSoFar = distToA[parentVertex] + distToB[parentVertex];
-                                ancestor = parentVertex;
-                                sap = shortestSoFar;
-                            }
-                        }
                         qB.enqueue(parentVertex);
                     }
                 }
+            }
+
+            for (int i = 0; i < digraph.V(); i++) {
+                if (markedA[i] && markedB[i]) {
+                    int currentDistance = distToA[i] + distToB[i];
+                    if (currentDistance < shortestSoFar) {
+                        shortestSoFar = currentDistance;
+                        ancestor = i;
+                        sap = shortestSoFar;
+                    }
+                }
+
             }
 
             return new int[] { ancestor, sap };

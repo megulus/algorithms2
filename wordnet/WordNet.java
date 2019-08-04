@@ -66,13 +66,6 @@ public class WordNet {
         if (outdegreeZeroCount != 1)
             throw new IllegalArgumentException("input to WordNet must be a valid rooted DAG");
         sap = new SAP(this.digraph);
-        StdOut.println(digraph.toString());
-        StdOut.println("vertexToSynset " + digraph.V());
-        StdOut.println("edges " + digraph.E());
-        StdOut.println("root = " + this.root);
-        StdOut.println("outdegree root " + digraph.outdegree(root));
-        StdOut.println("indegree root " + digraph.indegree(root));
-        StdOut.println("nounToVertices " + nouns());
     }
 
     public Iterable<String> nouns() {
@@ -112,6 +105,7 @@ public class WordNet {
         WordNet wn = new WordNet(file1, file2);
         StdOut.println(wn.sap("o", "c"));
         StdOut.println(wn.distance("d", "e"));
+        StdOut.println("self to self " + wn.sap("c", "c") + " " + wn.distance("c", "c"));
     }
 
 }
