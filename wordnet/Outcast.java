@@ -24,7 +24,7 @@ public class Outcast {
         int longestDistanceSoFar = 0;
         for (int i = 0; i < nouns.length; i++) {
             int currentNounDistance = 0;
-            for (int j = 1; j < nouns.length; j++) {
+            for (int j = 0; j < nouns.length; j++) {
                 if (!wordnet.isNoun(nouns[i]) || !wordnet.isNoun(nouns[j]))
                     throw new IllegalArgumentException("arguments must be nouns");
                 int distance = wordnet.distance(nouns[i], nouns[j]);
