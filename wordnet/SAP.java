@@ -15,25 +15,35 @@ public class SAP {
     private ModifiedBFS mbfs;
 
     public SAP(Digraph G) {
+        if (G == null)
+            throw new IllegalArgumentException("must provide a digraph argument to constructor");
         this.G = G;
         this.mbfs = new ModifiedBFS(this.G);
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
-    public int length(int v, int w) {
+    public int length(Integer v, Integer w) {
+        if (v == null || w == null)
+            throw new IllegalArgumentException("arguments to length cannot be null");
         return mbfs.sap(v, w);
     }
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if none exists;
     public int ancestor(int v, int w) {
+        if (v == null || w == null)
+            throw new IllegalArgumentException("arguments to ancestor cannot be null");
         return mbfs.ancestor(v, w);
     }
 
     // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
     public int length(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null)
+            throw new IllegalArgumentException("arguments to length cannot be null");
         int shortestPathSoFar = Integer.MAX_VALUE;
-        for (int vertexA : v) {
-            for (int vertexB : w) {
+        for (Integer vertexA : v) {
+            if (vertexA == null) throw new IllegalArgumentException("vertex cannot be null");
+            for (Integer vertexB : w) {
+                if (vertexB == null) throw new IllegalArgumentException("vertex cannot be null");
                 int pathLength = mbfs.sap(vertexA, vertexB);
                 if (pathLength < shortestPathSoFar) {
                     shortestPathSoFar = pathLength;
@@ -45,10 +55,14 @@ public class SAP {
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null)
+            throw new IllegalArgumentException("arguments to ancestor cannot be null");
         int bestAncestorSoFar = -1;
         int shortestPathSoFar = Integer.MAX_VALUE;
-        for (int vertexA : v) {
-            for (int vertexB : w) {
+        for (Integer vertexA : v) {
+            if (vertexA == null) throw new IllegalArgumentException("vertex cannot be null");
+            for (Integer vertexB : w) {
+                if (vertexB == null) throw new IllegalArgumentException("vertex cannot be null");
                 int pathLength = mbfs.sap(vertexA, vertexB);
                 if (pathLength < shortestPathSoFar) {
                     shortestPathSoFar = pathLength;
@@ -152,7 +166,8 @@ public class SAP {
             return new int[] { ancestor, sap };
         }
 
-        private void validateVertex(int s) {
+        private void validateVertex(Integer s) {
+            if (s == null) throw new IllegalArgumentException("vertex cannot be null");
             if (s < 0 || s >= this.digraph.V()) throw new IllegalArgumentException(
                     "vertex " + s + " is not between 0 and " + (this.digraph.V() - 1));
         }
