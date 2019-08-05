@@ -57,6 +57,16 @@ public class WordNet {
         Topological topo = new Topological(this.digraph);
         if (!topo.hasOrder())
             throw new IllegalArgumentException("input to WordNet must be a valid rooted DAG");
+        int outdegreeZeroCount = 0;
+        for (int i = 0; i < synsetCount; i++) {
+            int outdegree = digraph.outdegree(i);
+            if (outdegree == 0) {
+                this.root = i;
+                outdegreeZeroCount++;
+            }
+        }
+        if (outdegreeZeroCount != 1)
+            throw new IllegalArgumentException("input to WordNet must be a valid rooted DAG");
 
         sap = new SAP(this.digraph);
     }

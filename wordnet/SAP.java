@@ -11,13 +11,13 @@ import edu.princeton.cs.algs4.StdOut;
 
 public class SAP {
 
-    private Digraph G;
+    private final Digraph G;
     private ModifiedBFS mbfs;
 
     public SAP(Digraph G) {
         if (G == null)
             throw new IllegalArgumentException("must provide a digraph argument to constructor");
-        this.G = G;
+        this.G = new Digraph(G);
         this.mbfs = new ModifiedBFS(this.G);
     }
 
