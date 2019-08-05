@@ -22,16 +22,12 @@ public class SAP {
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
-    public int length(Integer v, Integer w) {
-        if (v == null || w == null)
-            throw new IllegalArgumentException("arguments to length cannot be null");
+    public int length(int v, int w) {
         return mbfs.sap(v, w);
     }
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if none exists;
     public int ancestor(int v, int w) {
-        if (v == null || w == null)
-            throw new IllegalArgumentException("arguments to ancestor cannot be null");
         return mbfs.ancestor(v, w);
     }
 
@@ -40,16 +36,21 @@ public class SAP {
         if (v == null || w == null)
             throw new IllegalArgumentException("arguments to length cannot be null");
         int shortestPathSoFar = Integer.MAX_VALUE;
+        int countA = 0;
+        int countB = 0;
         for (Integer vertexA : v) {
             if (vertexA == null) throw new IllegalArgumentException("vertex cannot be null");
+            countA++;
             for (Integer vertexB : w) {
                 if (vertexB == null) throw new IllegalArgumentException("vertex cannot be null");
+                countB++;
                 int pathLength = mbfs.sap(vertexA, vertexB);
                 if (pathLength < shortestPathSoFar) {
                     shortestPathSoFar = pathLength;
                 }
             }
         }
+        if (countA == 0 || countB == 0) return -1;
         return shortestPathSoFar;
     }
 
@@ -59,10 +60,14 @@ public class SAP {
             throw new IllegalArgumentException("arguments to ancestor cannot be null");
         int bestAncestorSoFar = -1;
         int shortestPathSoFar = Integer.MAX_VALUE;
+        int countA = 0;
+        int countB = 0;
         for (Integer vertexA : v) {
             if (vertexA == null) throw new IllegalArgumentException("vertex cannot be null");
+            countA++;
             for (Integer vertexB : w) {
                 if (vertexB == null) throw new IllegalArgumentException("vertex cannot be null");
+                countB++;
                 int pathLength = mbfs.sap(vertexA, vertexB);
                 if (pathLength < shortestPathSoFar) {
                     shortestPathSoFar = pathLength;
@@ -70,6 +75,7 @@ public class SAP {
                 }
             }
         }
+        if (countA == 0 || countB == 0) return -1;
         return bestAncestorSoFar;
     }
 
