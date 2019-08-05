@@ -8,6 +8,7 @@
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.Topological;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,22 +50,14 @@ public class WordNet {
             String[] output = line.split(",");
             int v = Integer.parseInt(output[0]);
             for (int i = 1; i < output.length; i++) {
-                // create edge v -> w, i.e., from v to its hypernym(s) output[i]
                 digraph.addEdge(v, Integer.parseInt(output[i]));
             }
-            // else if (output.length == 1) this.root = v;
+            if (output.length == 1) this.root = v;
         }
-        // check whether valid roooted DAG: TODO - call Topological hasOrder() method if I can get it to work
-        int outdegreeZeroCount = 0;
-        for (int i = 0; i < synsetCount; i++) {
-            int outdegree = digraph.outdegree(i);
-            if (outdegree == 0) {
-                this.root = i;
-                outdegreeZeroCount++;
-            }
-        }
-        if (outdegreeZeroCount != 1)
+        Topological topo = new Topological(this.digraph);
+        if (!topo.hasOrder())
             throw new IllegalArgumentException("input to WordNet must be a valid rooted DAG");
+
         sap = new SAP(this.digraph);
     }
 
@@ -93,6 +86,10 @@ public class WordNet {
     // return a synset (second field of sysets.txt( that is the common acestor
     // of nounA and nounB in a shortest ancestral path
     public String sap(String nounA, String nounB) {
+        if (nounA == null || nounB == null)
+            throw new IllegalArgumentException("arguments to sap function cannot be null");
+        if (!isNoun(nounA) || !isNoun(nounB)) throw new IllegalArgumentException(
+                "arguments to sap function must be WordNet nounToVertices");
         Set<Integer> verticesForNounA = nounToVertices.get(nounA);
         Set<Integer> verticesForNounB = nounToVertices.get(nounB);
         int bestAncestorSoFar = sap.ancestor(verticesForNounA, verticesForNounB);
