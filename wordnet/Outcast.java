@@ -12,6 +12,8 @@ public class Outcast {
     private WordNet wordnet;
 
     public Outcast(WordNet wordnet) {
+        if (wordnet == null) throw new IllegalArgumentException(
+                "must provide a WordNet object to Outcast constructor");
         this.wordnet = wordnet;
     }
 
