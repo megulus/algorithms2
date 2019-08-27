@@ -135,15 +135,6 @@ public class SeamCarver {
         return seam;
     }
 
-    private ArrayList<Integer> adjacent(int col, int width) {
-        if (col < 0) throw new IllegalArgumentException("column cannot be less than zero");
-        ArrayList<Integer> reachable = new ArrayList<>();
-        if (col - 1 >= 0) reachable.add(col - 1);
-        reachable.add(col);
-        if (col + 1 < width) reachable.add(col + 1);
-        return reachable;
-    }
-
     private int[][] shiftColorMatrix(int[][] matrix, int[] seam, int width, int height) {
         int[][] tempColor = new int[height][width];
         for (int row = 0; row < matrix.length; row++) {
