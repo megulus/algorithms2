@@ -61,11 +61,6 @@ public class SeamCarver {
     // energy of pixel at column x and row y
     public double energy(int x, int y) {
         if (x == 0 || x == width() - 1 || y == 0 || y == height() - 1) return 1000;
-        // int rgbXPlusOne = picture.getRGB(x + 1, y);
-        // int rgbXMinusOne = picture.getRGB(x - 1, y);
-        // int rgbYPlusOne = picture.getRGB(x, y + 1);
-        // int rgbYMinusOne = picture.getRGB(x, y - 1);
-        // StdOut.println("energy: x " + x + " y " + y + " height " + height() + " width " + width());
         int rgbXPlusOne = this.color[y][x + 1];
         int rgbXMinusOne = this.color[y][x - 1];
         int rgbYPlusOne = this.color[y + 1][x];
@@ -134,8 +129,8 @@ public class SeamCarver {
     }
 
 
-    private int[] findSeamHelper(double[][] matrix, int width, int height) {
-        Dijkstra dijkstra = new Dijkstra(matrix, width, height);
+    private int[] findSeamHelper(double[][] matrix, int numColumns, int numRows) {
+        Dijkstra dijkstra = new Dijkstra(matrix, numColumns, numRows);
         int[] seam = dijkstra.shortestPath();
         return seam;
     }
@@ -264,136 +259,146 @@ public class SeamCarver {
         private int width;
         private int height;
         private double[][] energy;
-        private int[] shortestPath;
 
         public Dijkstra(double[][] matrix, int width, int height) {
             this.energy = matrix;
-            this.edgeTo = new Edge[height + 2];
-            this.distTo = new double[height + 2];
+            this.edgeTo = new Edge[width * height + 2];
+            this.distTo = new double[width * height + 2];
             this.pq = new IndexMinPQ<Double>((width * height) + 2);
-            this.bottom = height + 1;
+            this.bottom = width * height + 1;
             this.width = width;
             this.height = height;
-            this.shortestPath = new int[this.height];
 
-            for (int v = 0; v < bottom; v++) {
+            for (int v = 0; v < this.distTo.length; v++) {
                 distTo[v] = Double.POSITIVE_INFINITY;
             }
             distTo[top] = 0.0;
 
-            // initialize row
-            int nextRow = 0;
-
             pq.insert(top, 0.0);
             while (!pq.isEmpty()) {
-                int row = pq.delMin();
-                int col = edgeTo[row] != null ? edgeTo[row].w().col() : 0;
-                for (Edge e : adj(new Vertex(nextRow, col))) {
-                    StdOut.println(
-                            "next adjacent edge from: " + e.v().row() + " " + e.v().col() + " to "
-                                    + e.w().row() + " " + e.w().col());
+                int vertex = pq.delMin();
+                for (Edge e : this.adj(vertex)) {
                     relax(e);
                 }
-                nextRow++;
             }
+
+        }
+
+        private int vertexNum(int row, int col) {
+            return (this.width * row) + col + 1;
+        }
+
+        private int rowForVertex(int vertexNum) {
+            if (vertexNum <= 0 || vertexNum > (this.width * this.height)) {
+                throw new IllegalArgumentException("grump");
+            }
+            return (vertexNum - 1) / this.width;
+        }
+
+        private int colForVertex(int vertexNum) {
+            if (vertexNum <= 0 || vertexNum > (this.width * this.height)) {
+                throw new IllegalArgumentException("grump");
+            }
+            return (vertexNum - 1) % this.width;
 
         }
 
         public int[] shortestPath() {
-            for (int row = 1; row < this.height; row++) {
-                StdOut.println("row " + row + " height " + this.height + " edgeTo length "
-                                       + this.edgeTo.length + " shortestPath length "
-                                       + this.shortestPath.length);
-                StdOut.println("this.edgeTo[row] " + this.edgeTo[row]);
-                this.shortestPath[row] = this.edgeTo[row].w().col();
+            int[] result = new int[this.height];
+            Edge e = this.edgeTo[this.bottom];
+            while (e.v() != this.top) {
+                int currentRow = this.rowForVertex(e.v());
+                int currentColumn = this.colForVertex(e.v());
+                result[currentRow] = currentColumn;
+                e = this.edgeTo[e.v()];
             }
-            return this.shortestPath;
+            return result;
         }
 
-        // return adjacent columns
-        public ArrayList<Edge> adj(Vertex v) {
-            int rowFrom = v.row();
-            int colFrom = v.col();
-            int row = rowFrom + 1;
+        // return adjacent vertices
+        public ArrayList<Edge> adj(int vertexNum) {
             ArrayList<Edge> adjacent = new ArrayList<>();
-            if (rowFrom < -1 || rowFrom >= this.bottom) return adjacent;
-            else if (rowFrom == -1) {
+            if (vertexNum == this.top) {
                 for (int i = 0; i < this.width; i++) {
-                    adjacent.add(new Edge(v, new Vertex(row, i)));
+                    adjacent.add(new Edge(vertexNum, this.vertexNum(0, i)));
                 }
-                return adjacent;
             }
-            else if (row == this.height) {
-                adjacent.add(new Edge(v, new Vertex(this.bottom, 0)));
-                return adjacent;
-            }
-            else {
-                if (colFrom - 1 >= 0) adjacent.add(new Edge(v, new Vertex(row, colFrom - 1)));
-                adjacent.add(new Edge(v, new Vertex(row, colFrom)));
-                if (colFrom + 1 < width) adjacent.add(new Edge(v, new Vertex(row, colFrom + 1)));
+            else if (vertexNum != this.bottom) {
+                if (this.rowForVertex(vertexNum) == this.height - 1) {
+                    adjacent.add(new Edge(vertexNum, this.bottom));
+                }
+                else {
+                    int row = this.rowForVertex(vertexNum);
+                    int col = this.colForVertex(vertexNum);
+                    if (col > 0) {
+                        adjacent.add(new Edge(vertexNum, this.vertexNum(row + 1, col - 1)));
+                    }
+                    adjacent.add(new Edge(vertexNum, this.vertexNum(row + 1, col)));
+                    if (col < this.width - 1) {
+                        adjacent.add(new Edge(vertexNum, this.vertexNum(row + 1, col + 1)));
+                    }
+                }
             }
             return adjacent;
         }
 
         public void relax(Edge e) {
-            Vertex v = e.v();
-            Vertex w = e.w();
-            if (distTo[w.row()] > distTo[v.row()] + e.weight()) {
-                StdOut.println(
-                        "relaxing w.row() " + w.row() + " distTo[w.row()] " + distTo[w.row()]);
-                distTo[w.row()] = distTo[v.row()] + e.weight();
-                edgeTo[w.row()] = e;
-                if (pq.contains(w.row())) pq.decreaseKey(w.row(), distTo[w.row()]);
-                else pq.insert(w.row(), distTo[w.row()]);
+            int v = e.v();
+            int w = e.w();
+            double distanceThroughV = distTo[v] + e.weight();
+            if (distTo[w] > distanceThroughV) {
+                distTo[w] = distanceThroughV;
+                edgeTo[w] = e;
+                if (pq.contains(w)) pq.decreaseKey(w, distTo[w]);
+                else pq.insert(w, distTo[w]);
+            }
+            else if (distanceThroughV == distTo[w]) {
+                Edge oldEdge = edgeTo[w];
+                if (v < oldEdge.v()) {
+                    edgeTo[w] = e;
+                }
             }
         }
 
+        private String vertAsString(int vertexNum) {
+            if (vertexNum == this.top) {
+                return "top (" + vertexNum + ")";
+            }
+            if (vertexNum == this.bottom) {
+                return "bottom (" + vertexNum + ")";
+            }
+            return "(" + this.rowForVertex(vertexNum) + ", " + this.colForVertex(vertexNum) + ") - "
+                    +
+                    vertexNum;
+        }
+
         private class Edge {
-            private Vertex v; // from
-            private Vertex w; // to
+            private int v; // from
+            private int w; // to
             private double weight;
 
-            public Edge(Vertex from, Vertex to) {
+            public Edge(int from, int to) {
                 this.v = from;
                 this.w = to;
-                if (this.w.row() == Dijkstra.this.bottom) {
+                if (this.w == width * height + 1) {
                     this.weight = 0.0;
                 }
                 else {
-                    this.weight = Dijkstra.this.energy[this.w.row()][this.w.col()];
+                    this.weight = Dijkstra.this.energy[rowForVertex(this.w)][colForVertex(this.w)];
                 }
             }
 
-            public Vertex v() {
+            public int v() {
                 return this.v;
             }
 
-            public Vertex w() {
+            public int w() {
                 return this.w;
             }
 
             public double weight() {
                 return this.weight;
             }
-        }
-
-        private class Vertex {
-            private int row;
-            private int col;
-
-            public Vertex(int row, int col) {
-                this.row = row;
-                this.col = col;
-            }
-
-            public int row() {
-                return this.row;
-            }
-
-            public int col() {
-                return this.col;
-            }
-
         }
 
     }
