@@ -38,7 +38,7 @@ public class SeamCarver {
     private void calculateEnergyMatrix() {
         for (int row = 0; row < this.height; row++) {
             for (int col = 0; col < this.width; col++) {
-                energy[row][col] = energy(col, row);
+                energy[row][col] = energy(col, row, this.width, this.height, this.color);
             }
         }
     }
@@ -59,12 +59,12 @@ public class SeamCarver {
     }
 
     // energy of pixel at column x and row y
-    public double energy(int x, int y) {
-        if (x == 0 || x == width() - 1 || y == 0 || y == height() - 1) return 1000;
-        int rgbXPlusOne = this.color[y][x + 1];
-        int rgbXMinusOne = this.color[y][x - 1];
-        int rgbYPlusOne = this.color[y + 1][x];
-        int rgbYMinusOne = this.color[y - 1][x];
+    public double energy(int x, int y, int width, int height, int[][] colorMatrix) {
+        if (x == 0 || x == width - 1 || y == 0 || y == height - 1) return 1000;
+        int rgbXPlusOne = colorMatrix[y][x + 1];
+        int rgbXMinusOne = colorMatrix[y][x - 1];
+        int rgbYPlusOne = colorMatrix[y + 1][x];
+        int rgbYMinusOne = colorMatrix[y - 1][x];
         return Math.sqrt(gradientSquared(rgbXPlusOne, rgbXMinusOne) + gradientSquared(rgbYPlusOne,
                                                                                       rgbYMinusOne));
     }
@@ -101,9 +101,6 @@ public class SeamCarver {
 
     private int[][] transposeColorMatrix(int[][] colorMatrix, int originalHeight,
                                          int originalWidth) {
-        StdOut.println("input matrix height " + colorMatrix.length + " input width "
-                               + colorMatrix[0].length + " originalHeight " + originalHeight
-                               + " originalWidth " + originalWidth);
         int newWidth = originalHeight;
         int newHeight = originalWidth;
         int[][] transposedMatrix = new int[newHeight][newWidth];
@@ -150,49 +147,52 @@ public class SeamCarver {
 
     // remove horizontal seam from current picture
     public void removeHorizontalSeam(int[] seam) {
-        int newHeight = this.height - 1;
+        int targetHeight = this.height - 1;
         int[][] colorT = transposeColorMatrix(this.color, this.height, this.width);
-        int[][] tempColorT = shiftColorMatrix(colorT, seam, newHeight, this.width);
-        int[][] colorTT = transposeColorMatrix(tempColorT, this.width, newHeight);
-        this.color = colorTT;
+        int[][] tempColorT = shiftColorMatrix(colorT, seam, targetHeight, this.width);
+        int[][] colorTT = transposeColorMatrix(tempColorT, this.width, targetHeight);
         double[][] energyT = transposeEnergyMatrix(this.energy, this.height, this.width);
-        double[][] tempEnergyT = seamRemovalHelper(energyT, seam, newHeight, this.width);
-        double[][] energyTT = transposeEnergyMatrix(tempEnergyT, this.width, newHeight);
+        this.height = targetHeight;
+        double[][] tempEnergyT = seamRemovalHelper(energyT, seam, targetHeight, this.width,
+                                                   tempColorT);
+        double[][] energyTT = transposeEnergyMatrix(tempEnergyT, this.width, targetHeight);
+        this.color = colorTT;
         this.energy = energyTT;
-        this.height = newHeight;
     }
 
     // remove vertical seam from current picture
     public void removeVerticalSeam(int[] seam) {
-        int newWidth = this.width - 1;
-        this.width = newWidth;
+        int targetWidth = this.width - 1;
+        this.width = targetWidth;
         int[][] tempColor = shiftColorMatrix(this.color, seam, this.width, this.height);
         this.color = tempColor;
-        double[][] tempEnergy = seamRemovalHelper(this.energy, seam, this.width, this.height);
+        double[][] tempEnergy = seamRemovalHelper(this.energy, seam, this.width, this.height,
+                                                  this.color);
         this.energy = tempEnergy;
     }
 
-    private double[][] seamRemovalHelper(double[][] energyMatrix, int[] seam, int width,
-                                         int height) {
-        double[][] tempEnergy = new double[height][width];
-        for (int x = 0; x < energyMatrix.length; x++) {
-            double[] energyRow = energyMatrix[x];
-            int elim = seam[x];
-            for (int y = 0; y < energyRow.length; y++) {
-                if (y < elim) {
-                    if (y == elim - 1) {
-                        tempEnergy[x][y] = energy(y, x);
+    private double[][] seamRemovalHelper(double[][] energyMatrix, int[] seam, int targetWidth,
+                                         int height, int[][] colorMatrix) {
+        double[][] tempEnergy = new double[height][targetWidth];
+        for (int row = 0; row < energyMatrix.length; row++) {
+            double[] energyRow = energyMatrix[row];
+            int elimCol = seam[row];
+            for (int col = 0; col < energyRow.length; col++) {
+                if (col < elimCol) {
+                    if (col == elimCol - 1) {
+                        tempEnergy[row][col] = energy(col, row, targetWidth, height, colorMatrix);
                     }
                     else {
-                        tempEnergy[x][y] = energyMatrix[x][y];
+                        tempEnergy[row][col] = energyMatrix[row][col];
                     }
                 }
-                else if (y > elim) {
-                    if (y == elim + 1) {
-                        tempEnergy[x][y - 1] = energy(y - 1, x);
+                else if (col > elimCol) {
+                    if (col == elimCol + 1) {
+                        tempEnergy[row][col - 1] = energy(col - 1, row, targetWidth, height,
+                                                          colorMatrix);
                     }
                     else {
-                        tempEnergy[x][y - 1] = energyMatrix[x][y];
+                        tempEnergy[row][col - 1] = energyMatrix[row][col];
                     }
                 }
             }
@@ -212,7 +212,7 @@ public class SeamCarver {
 
         for (int row = 0; row < sc.height(); row++) {
             for (int col = 0; col < sc.width(); col++)
-                StdOut.printf("%9.2f ", sc.energy(col, row));
+                StdOut.printf("%9.2f ", sc.energy(col, row, sc.width(), sc.height(), sc.color));
             StdOut.println();
         }
 
