@@ -45,7 +45,16 @@ public class SeamCarver {
 
     // current picture
     public Picture picture() {
-        return new Picture(this.picture);
+        if (this.picture != null) return new Picture(this.picture);
+        else {
+            this.picture = new Picture(this.width, this.height);
+            for (int col = 0; col < this.width; col++) {
+                for (int row = 0; row < this.height; row++) {
+                    this.picture.setRGB(col, row, this.color[row][col]);
+                }
+            }
+        }
+        return this.picture;
     }
 
     // width of current picture
@@ -60,6 +69,8 @@ public class SeamCarver {
 
     // energy of pixel at column x and row y
     public double energy(int x, int y, int width, int height, int[][] colorMatrix) {
+        if (x < 0 || y < 0 || x > width - 1 || y > height - 1) throw new IllegalArgumentException(
+                "x and y must be greater than 0, less than width, height respectively");
         if (x == 0 || x == width - 1 || y == 0 || y == height - 1) return 1000;
         int rgbXPlusOne = colorMatrix[y][x + 1];
         int rgbXMinusOne = colorMatrix[y][x - 1];
@@ -147,6 +158,12 @@ public class SeamCarver {
 
     // remove horizontal seam from current picture
     public void removeHorizontalSeam(int[] seam) {
+        if (seam == null) throw new IllegalArgumentException("must provide a seam to remove");
+        if (seam.length != this.width)
+            throw new IllegalArgumentException("seam is the wrong length");
+        if (this.width <= 1)
+            throw new IllegalArgumentException("cannot remove horizonal seam when width <= 1");
+        this.picture = null;
         int targetHeight = this.height - 1;
         int[][] colorT = transposeColorMatrix(this.color, this.height, this.width);
         int[][] tempColorT = shiftColorMatrix(colorT, seam, targetHeight, this.width);
@@ -162,6 +179,12 @@ public class SeamCarver {
 
     // remove vertical seam from current picture
     public void removeVerticalSeam(int[] seam) {
+        if (seam == null) throw new IllegalArgumentException("must provide a seam to remove");
+        if (seam.length != this.height)
+            throw new IllegalArgumentException("seam is the wrong length");
+        if (this.height <= 1)
+            throw new IllegalArgumentException("cannot remove vertical seam when height <= 1");
+        this.picture = null;
         int targetWidth = this.width - 1;
         this.width = targetWidth;
         int[][] tempColor = shiftColorMatrix(this.color, seam, this.width, this.height);
@@ -174,9 +197,12 @@ public class SeamCarver {
     private double[][] seamRemovalHelper(double[][] energyMatrix, int[] seam, int targetWidth,
                                          int height, int[][] colorMatrix) {
         double[][] tempEnergy = new double[height][targetWidth];
+        int previousElimCol = seam[0];
         for (int row = 0; row < energyMatrix.length; row++) {
             double[] energyRow = energyMatrix[row];
             int elimCol = seam[row];
+            if (Math.abs(elimCol - previousElimCol) > 1)
+                throw new IllegalArgumentException("invalid seam");
             for (int col = 0; col < energyRow.length; col++) {
                 if (col < elimCol) {
                     if (col == elimCol - 1) {
