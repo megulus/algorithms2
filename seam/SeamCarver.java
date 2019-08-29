@@ -68,15 +68,15 @@ public class SeamCarver {
     }
 
     // energy of pixel at column x and row y
-    public double energy(int x, int y) {
-        if (x < 0 || y < 0 || x > this.width - 1 || y > this.height - 1)
+    public double energy(int col, int row) {
+        if (col < 0 || row < 0 || col > this.width - 1 || row > this.height - 1)
             throw new IllegalArgumentException(
                     "x and y must be greater than 0, less than width, height respectively");
-        if (x == 0 || x == width - 1 || y == 0 || y == height - 1) return 1000;
-        int rgbXPlusOne = this.color[y][x + 1];
-        int rgbXMinusOne = this.color[y][x - 1];
-        int rgbYPlusOne = this.color[y + 1][x];
-        int rgbYMinusOne = this.color[y - 1][x];
+        if (col == 0 || col == width - 1 || row == 0 || row == height - 1) return 1000;
+        int rgbXPlusOne = this.color[row][col + 1];
+        int rgbXMinusOne = this.color[row][col - 1];
+        int rgbYPlusOne = this.color[row + 1][col];
+        int rgbYMinusOne = this.color[row - 1][col];
         return Math.sqrt(gradientSquared(rgbXPlusOne, rgbXMinusOne) + gradientSquared(rgbYPlusOne,
                                                                                       rgbYMinusOne));
     }
