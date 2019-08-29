@@ -311,14 +311,14 @@ public class SeamCarver {
         private int height;
         private double[][] energy;
 
-        public Dijkstra(double[][] matrix, int width, int height) {
+        public Dijkstra(double[][] matrix) {
             this.energy = matrix;
-            this.edgeTo = new Edge[width * height + 2];
-            this.distTo = new double[width * height + 2];
-            this.pq = new IndexMinPQ<Double>((width * height) + 2);
-            this.bottom = width * height + 1;
-            this.width = width;
-            this.height = height;
+            this.width = matrix[0].length;
+            this.height = matrix.length;
+            this.edgeTo = new Edge[this.width * this.height + 2];
+            this.distTo = new double[this.width * this.height + 2];
+            this.pq = new IndexMinPQ<Double>((this.width * this.height) + 2);
+            this.bottom = this.width * this.height + 1;
 
             for (int v = 0; v < this.distTo.length; v++) {
                 distTo[v] = Double.POSITIVE_INFINITY;
