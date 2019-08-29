@@ -17,12 +17,14 @@ public class SeamCarver {
     private int[][] color;
     private int height;
     private int width;
+    private SeamCarverHelper verticalCarver, horizontalCarver;
 
     // create a seam carver object based on the given picture
     public SeamCarver(Picture picture) {
         if (picture == null) throw new IllegalArgumentException(
                 "must provide a Picture object to the SeamCarver constructor");
         this.picture = new Picture(picture);
+
         this.height = this.picture.height();
         this.width = this.picture.width();
         this.energy = new double[height][width];
@@ -33,6 +35,10 @@ public class SeamCarver {
             }
         }
         calculateEnergyMatrix();
+
+        this.verticalCarver = new SeamCarverHelper(this.color, this.energy);
+        this.horizontalCarver = new SeamCarverHelper(transposeColorMatrix(this.color),
+                                                     transposeEnergyMatrix(this.energy));
     }
 
     private void calculateEnergyMatrix() {
@@ -98,26 +104,26 @@ public class SeamCarver {
         return (rgb >> 0) & 0xFF;
     }
 
-    private double[][] transposeEnergyMatrix(double[][] energyMatrix, int originalHeight,
-                                             int originalWidth) {
-        int newWidth = originalHeight;
-        int newHeight = originalWidth;
-        double[][] transposedMatrix = new double[newHeight][newWidth];
-        for (int row = 0; row < newHeight; row++) {
-            for (int col = 0; col < newWidth; col++) {
+    private double[][] transposeEnergyMatrix(double[][] energyMatrix) {
+        int newNumberCols
+                = energyMatrix.length; // orig rows == orig height == new width == new cols
+        int newNumberRows
+                = energyMatrix[0].length; // orig cols == orig width == new height == new rows
+        double[][] transposedMatrix = new double[newNumberRows][newNumberCols];
+        for (int row = 0; row < newNumberRows; row++) {
+            for (int col = 0; col < newNumberCols; col++) {
                 transposedMatrix[row][col] = energyMatrix[col][row];
             }
         }
         return transposedMatrix;
     }
 
-    private int[][] transposeColorMatrix(int[][] colorMatrix, int originalHeight,
-                                         int originalWidth) {
-        int newWidth = originalHeight;
-        int newHeight = originalWidth;
-        int[][] transposedMatrix = new int[newHeight][newWidth];
-        for (int row = 0; row < newHeight; row++) {
-            for (int col = 0; col < newWidth; col++) {
+    private int[][] transposeColorMatrix(int[][] colorMatrix) {
+        int newNumberCols = colorMatrix.length;
+        int newNumberRows = colorMatrix[0].length;
+        int[][] transposedMatrix = new int[newNumberRows][newNumberCols];
+        for (int row = 0; row < newNumberRows; row++) {
+            for (int col = 0; col < newNumberCols; col++) {
                 transposedMatrix[row][col] = colorMatrix[col][row];
             }
         }
@@ -127,8 +133,7 @@ public class SeamCarver {
 
     // sequence of indices for horizontal seam
     public int[] findHorizontalSeam() {
-        double[][] transposedEnergyMatrix = transposeEnergyMatrix(this.energy, this.height,
-                                                                  this.width);
+        double[][] transposedEnergyMatrix = transposeEnergyMatrix(this.energy);
         return findSeamHelper(transposedEnergyMatrix, this.height, this.width);
     }
 
@@ -166,10 +171,10 @@ public class SeamCarver {
             throw new IllegalArgumentException("cannot remove horizonal seam when width <= 1");
         this.picture = null;
         int targetHeight = this.height - 1;
-        int[][] colorT = transposeColorMatrix(this.color, this.height, this.width);
+        int[][] colorT = transposeColorMatrix(this.color);
         int[][] tempColorT = shiftColorMatrix(colorT, seam, targetHeight, this.width);
-        int[][] colorTT = transposeColorMatrix(tempColorT, this.width, targetHeight);
-        double[][] energyT = transposeEnergyMatrix(this.energy, this.height, this.width);
+        int[][] colorTT = transposeColorMatrix(tempColorT);
+        double[][] energyT = transposeEnergyMatrix(this.energy);
         this.color = tempColorT;
         // temp:
         this.height = this.width;
@@ -177,7 +182,7 @@ public class SeamCarver {
         double[][] tempEnergyT = seamRemovalHelper(energyT, seam);
         this.width = this.height; // i.e., back to original width
         this.height = targetHeight;
-        double[][] energyTT = transposeEnergyMatrix(tempEnergyT, this.width, targetHeight);
+        double[][] energyTT = transposeEnergyMatrix(tempEnergyT);
         this.color = colorTT;
         this.energy = energyTT;
     }
@@ -267,6 +272,33 @@ public class SeamCarver {
 
     }
 
+    private static class SeamCarverHelper {
+        public SeamCarverHelper(int[][] color, double[][] energy) {
+
+        }
+
+        public int[] findSeam() {
+        }
+
+        public void removeSeam(int[] seam) {
+
+        }
+
+        public int[][] getColorMatrix() {
+            // needed because the SeamCarverHelper won't
+        }
+
+        public double[][] getEnergyMatrix() {
+
+        }
+
+        private int numRows() {
+        }
+
+        private int numCols() {
+
+        }
+    }
 
     private class Dijkstra {
 
