@@ -163,28 +163,6 @@ public class SeamCarver {
                 StdOut.printf("%9.2f ", sc.energy(col, row));
             StdOut.println();
         }
-
-        StdOut.printf("Printing energy energy matrix.\n");
-
-        double[][] energy = sc.energy;
-
-        for (int row = 0; row < sc.height(); row++) {
-            for (int col = 0; col < sc.width(); col++)
-                StdOut.printf("%9.2f ", energy[row][col]);
-            StdOut.println();
-        }
-
-        StdOut.printf("Printing transposed energy matrix.\n");
-
-        double[][] transposedEnergy = sc.transposeEnergyMatrix(sc.energy);
-
-        for (int row = 0; row < sc.width(); row++) {
-            for (int col = 0; col < sc.height(); col++)
-                // StdOut.printf("%9.0f ", sc.energy(col, row));
-                StdOut.printf("%9.2f ", transposedEnergy[row][col]);
-            StdOut.println();
-        }
-
     }
 
     private class SeamCarverHelper {
