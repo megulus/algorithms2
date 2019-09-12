@@ -145,6 +145,8 @@ public class SeamCarver {
         this.horizontalCarver.removeSeam(seam);
         this.energy = transposeEnergyMatrix(horizontalCarver.getEnergyMatrix());
         this.color = transposeColorMatrix(horizontalCarver.getColorMatrix());
+        this.verticalCarver = new SeamCarverHelper(this.color);
+        this.horizontalCarver = new SeamCarverHelper(transposeColorMatrix(this.color));
     }
 
     // remove vertical seam from current picture
@@ -158,6 +160,8 @@ public class SeamCarver {
         verticalCarver.removeSeam(seam);
         this.energy = verticalCarver.getEnergyMatrix();
         this.color = verticalCarver.getColorMatrix();
+        this.verticalCarver = new SeamCarverHelper(this.color);
+        this.horizontalCarver = new SeamCarverHelper(transposeColorMatrix(this.color));
     }
 
 
