@@ -37,16 +37,6 @@ public class SeamCarver {
         this.energy = verticalCarver.getEnergyMatrix();
     }
 
-    private void calculateEnergyMatrix() {
-        int height = this.picture.height();
-        int width = this.picture.width();
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                energy[row][col] = energy(col, row);
-            }
-        }
-    }
-
     // current picture
     public Picture picture() {
         int width = this.color[0].length;
@@ -124,6 +114,7 @@ public class SeamCarver {
 
     // sequence of indices for horizontal seam
     public int[] findHorizontalSeam() {
+        // TODO: Why are you transposing here? There's no need.
         double[][] transposedEnergyMatrix = transposeEnergyMatrix(this.energy);
         return this.horizontalCarver.findSeam();
     }
@@ -146,6 +137,8 @@ public class SeamCarver {
         this.energy = transposeEnergyMatrix(horizontalCarver.getEnergyMatrix());
         this.color = transposeColorMatrix(horizontalCarver.getColorMatrix());
         this.verticalCarver = new SeamCarverHelper(this.color);
+        // TODO: Why are you re-transposing? You had the right version of the color matrix on line 148.
+        // TODO: Why do you even need to recreate the horizontal carver?
         this.horizontalCarver = new SeamCarverHelper(transposeColorMatrix(this.color));
     }
 
@@ -160,6 +153,7 @@ public class SeamCarver {
         verticalCarver.removeSeam(seam);
         this.energy = verticalCarver.getEnergyMatrix();
         this.color = verticalCarver.getColorMatrix();
+        // TODO: Why recreate the vertical carver?
         this.verticalCarver = new SeamCarverHelper(this.color);
         this.horizontalCarver = new SeamCarverHelper(transposeColorMatrix(this.color));
     }
@@ -230,6 +224,9 @@ public class SeamCarver {
         }
 
         public int[] findSeam() {
+            // TODO: Why do you cache this.energy? That means you are keeping
+            // both the horizontal and vertical energy matrixes in memory at all times.
+            // Why not calculate it lazily, when you need it?
             Dijkstra dk = new Dijkstra(this.energy);
             return dk.shortestPath();
         }
