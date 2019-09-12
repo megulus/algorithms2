@@ -207,15 +207,19 @@ public class SeamCarver {
     private class SeamCarverHelper {
         private int[][] color;
         private double[][] energy;
+        private int numRows;
+        private int numCols;
 
         public SeamCarverHelper(int[][] color) {
             this.color = color;
+            this.numRows = this.color.length;
+            this.numCols = this.color[0].length;
             calculateEnergyMatrix();
         }
 
         private void calculateEnergyMatrix() {
-            int height = numRows();
-            int width = numCols();
+            int height = this.numRows;
+            int width = this.numCols;
             double[][] tempEnergy = new double[height][width];
             for (int row = 0; row < height; row++) {
                 for (int col = 0; col < width; col++) {
@@ -232,8 +236,8 @@ public class SeamCarver {
 
         // energy of pixel at column x and row y
         public double calculateEnergy(int col, int row) {
-            int width = numCols();
-            int height = numRows();
+            int width = this.numCols;
+            int height = this.numRows;
             if (col < 0 || row < 0 || col > width - 1 || row > height - 1)
                 throw new IllegalArgumentException(
                         "x and y must be greater than 0, less than width, height respectively");
@@ -248,9 +252,8 @@ public class SeamCarver {
         }
 
         public void removeSeam(int[] seam) {
-            resizeColorMatrix(seam);
-            int height = numRows();
-            int currentWidth = numCols();
+            int height = this.numRows;
+            int currentWidth = this.numCols;
             double[][] newEnergy = new double[height][currentWidth - 1];
             int previousElimCol = seam[0];
             for (int row = 0; row < height; row++) {
@@ -281,13 +284,15 @@ public class SeamCarver {
                 previousElimCol = elimCol;
             }
             this.energy = newEnergy;
+            resizeColorMatrix(seam);
+            this.numCols = currentWidth - 1;
         }
 
         public void resizeColorMatrix(int[] seam) {
-            int targetHeight = numRows() - 1;
-            int width = numCols();
-            int[][] tempColor = new int[targetHeight][width];
-            for (int row = 0; row < targetHeight; row++) {
+            int height = this.numRows;
+            int currentWidth = this.numCols;
+            int[][] tempColor = new int[height][currentWidth - 1];
+            for (int row = 0; row < height; row++) {
                 int[] pixelRow = this.color[row];
                 int elim = seam[row];
                 for (int col = 0; col < pixelRow.length; col++) {
@@ -307,11 +312,11 @@ public class SeamCarver {
         }
 
         private int numRows() {
-            return this.color.length;
+            return this.numRows;
         }
 
         private int numCols() {
-            return this.color[0].length;
+            return this.numCols;
         }
     }
 
