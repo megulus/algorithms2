@@ -13,7 +13,6 @@ import java.util.ArrayList;
 public class SeamCarver {
 
     private Picture picture;
-    private double[][] energy;
     private int[][] color;
     private SeamCarverHelper verticalCarver, horizontalCarver;
 
@@ -28,21 +27,20 @@ public class SeamCarver {
         this.color = new int[height][width];
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
-                color[row][col] = picture.getRGB(col, row);
+                this.color[row][col] = picture.getRGB(col, row);
             }
         }
 
         this.verticalCarver = new SeamCarverHelper(this.color);
         this.horizontalCarver = new SeamCarverHelper(transposeColorMatrix(this.color));
-        this.energy = verticalCarver.getEnergyMatrix();
     }
 
     // current picture
     public Picture picture() {
-        int width = this.color[0].length;
-        int height = this.color.length;
         if (this.picture != null) return new Picture(this.picture);
         else {
+            int width = this.color[0].length;
+            int height = this.color.length;
             this.picture = new Picture(width, height);
             for (int col = 0; col < width; col++) {
                 for (int row = 0; row < height; row++) {
@@ -50,7 +48,7 @@ public class SeamCarver {
                 }
             }
         }
-        return this.picture;
+        return new Picture(this.picture);
     }
 
     // width of current picture
@@ -132,7 +130,6 @@ public class SeamCarver {
             throw new IllegalArgumentException("cannot remove horizonal seam when width <= 1");
         this.picture = null;
         this.horizontalCarver.removeSeam(seam);
-        this.energy = transposeEnergyMatrix(horizontalCarver.getEnergyMatrix());
         this.color = transposeColorMatrix(horizontalCarver.getColorMatrix());
         this.verticalCarver = new SeamCarverHelper(this.color);
     }
@@ -146,7 +143,6 @@ public class SeamCarver {
             throw new IllegalArgumentException("cannot remove vertical seam when height <= 1");
         this.picture = null;
         verticalCarver.removeSeam(seam);
-        this.energy = verticalCarver.getEnergyMatrix();
         this.color = verticalCarver.getColorMatrix();
         this.horizontalCarver = new SeamCarverHelper(transposeColorMatrix(this.color));
     }
