@@ -201,10 +201,9 @@ public class SeamCarver {
             this.color = color;
             this.numRows = this.color.length;
             this.numCols = this.color[0].length;
-            calculateEnergyMatrix();
         }
 
-        private void calculateEnergyMatrix() {
+        private double[][] calculateEnergyMatrix() {
             int height = this.numRows;
             int width = this.numCols;
             double[][] tempEnergy = new double[height][width];
@@ -213,14 +212,12 @@ public class SeamCarver {
                     tempEnergy[row][col] = calculateEnergy(col, row);
                 }
             }
-            this.energy = tempEnergy;
+            return tempEnergy;
         }
 
         public int[] findSeam() {
-            // TODO: Why do you cache this.energy? That means you are keeping
-            // both the horizontal and vertical energy matrixes in memory at all times.
-            // Why not calculate it lazily, when you need it?
-            Dijkstra dk = new Dijkstra(this.energy);
+            double[][] energy = calculateEnergyMatrix();
+            Dijkstra dk = new Dijkstra(energy);
             return dk.shortestPath();
         }
 
@@ -244,10 +241,11 @@ public class SeamCarver {
         public void removeSeam(int[] seam) {
             int height = this.numRows;
             int currentWidth = this.numCols;
+            double[][] energy = calculateEnergyMatrix();
             double[][] newEnergy = new double[height][currentWidth - 1];
             int previousElimCol = seam[0];
             for (int row = 0; row < height; row++) {
-                double[] energyMatrixRow = this.energy[row];
+                double[] energyMatrixRow = energy[row];
                 int elimCol = seam[row];
                 if (elimCol < 0 || elimCol > energyMatrixRow.length - 1)
                     throw new IllegalArgumentException("invalid seam - entry out of range");
@@ -259,7 +257,7 @@ public class SeamCarver {
                             newEnergy[row][col] = calculateEnergy(col, row);
                         }
                         else {
-                            newEnergy[row][col] = this.energy[row][col];
+                            newEnergy[row][col] = energy[row][col];
                         }
                     }
                     else if (col > elimCol) {
@@ -267,13 +265,12 @@ public class SeamCarver {
                             newEnergy[row][col - 1] = calculateEnergy(col - 1, row);
                         }
                         else {
-                            newEnergy[row][col - 1] = this.energy[row][col];
+                            newEnergy[row][col - 1] = energy[row][col];
                         }
                     }
                 }
                 previousElimCol = elimCol;
             }
-            this.energy = newEnergy;
             resizeColorMatrix(seam);
             this.numCols = currentWidth - 1;
         }
@@ -298,7 +295,7 @@ public class SeamCarver {
         }
 
         public double[][] getEnergyMatrix() {
-            return this.energy;
+            return calculateEnergyMatrix();
         }
 
         private int numRows() {
