@@ -114,8 +114,6 @@ public class SeamCarver {
 
     // sequence of indices for horizontal seam
     public int[] findHorizontalSeam() {
-        // TODO: Why are you transposing here? There's no need.
-        double[][] transposedEnergyMatrix = transposeEnergyMatrix(this.energy);
         return this.horizontalCarver.findSeam();
     }
 
