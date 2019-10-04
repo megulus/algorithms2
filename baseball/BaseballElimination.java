@@ -7,6 +7,7 @@
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BaseballElimination {
@@ -56,13 +57,24 @@ public class BaseballElimination {
             }
             StdOut.println();
         }
+        StdOut.println("all teams:");
+        for (String team : teams()) StdOut.print(team + " ");
+        StdOut.println();
     }
 
     // number of teams
-    // public int numberOfTeams() {}
+    public int numberOfTeams() {
+        return this.numTeams;
+    }
 
     // all teams
-    // public Iterable<String> teams() {}
+    public Iterable<String> teams() {
+        ArrayList<String> teams = new ArrayList<>();
+        for (int i = 0; i < this.numTeams; i++) {
+            teams.add(this.teamNumToName[i]);
+        }
+        return teams;
+    }
 
     // number of wins for given team
     // public int wins(String team) {}
