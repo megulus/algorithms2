@@ -19,31 +19,36 @@ public class BaseballElimination {
     }
 
     private void printTeamsData() {
-        int numTeams = this.divisionData.numTeams;
-        for (int i = 0; i < numTeams; i++) {
-            StdOut.println();
-            TeamData data = this.divisionData.teamData.get(i);
-            StdOut.println("team name " + data.name());
-            StdOut.println(
-                    " wins: " + data.wins() + " losses: " + data.losses() + " remaining games: "
-                            + data.remaining());
-            StdOut.println("remaining games against: ");
-            for (int j = 0; j < numTeams; j++) {
-                StdOut.print(
-                        "  " + this.divisionData.allTeams.get(j) + ": " + data.gamesAgainst(j));
-            }
-            StdOut.println();
+        StdOut.println("number of teams: " + numberOfTeams());
+        for (String team : this.divisionData.allTeams()) {
+            StdOut.println("team name: " + team + " wins: " + wins(team));
+            // TeamData data = this.divisionData.teamData.get(i);
+            // StdOut.println("team name " + data.name());
+            // StdOut.println(
+            //         " wins: " + data.wins() + " losses: " + data.losses() + " remaining games: "
+            //                 + data.remaining());
+            // StdOut.println("remaining games against: ");
+            // for (int j = 0; j < numTeams; j++) {
+            //     StdOut.print(
+            //             "  " + this.divisionData.allTeams.get(j) + ": " + data.gamesAgainst(j));
+            // }
         }
     }
 
     // number of teams
-    // public int numberOfTeams() {}
+    public int numberOfTeams() {
+        return this.divisionData.numberOfTeams();
+    }
 
     // all teams
-    // public Iterable<String> teams() {}
+    public Iterable<String> teams() {
+        return this.divisionData.allTeams();
+    }
 
     // number of wins for given team
-    // public int wins(String team) {}
+    public int wins(String team) {
+        return divisionData.wins(team);
+    }
 
     // number of losses for given team
     // public int losses(String team) {}
@@ -94,6 +99,18 @@ public class BaseballElimination {
             }
         }
 
+        public int numberOfTeams() {
+            return this.numTeams;
+        }
+
+        public ArrayList<String> allTeams() {
+            return this.allTeams;
+        }
+
+        public int wins(String name) {
+            TeamData data = teamData.get(this.allTeams.indexOf(name));
+            return data.wins();
+        }
 
     }
 
@@ -118,7 +135,7 @@ public class BaseballElimination {
             }
         }
 
-        public int number() {
+        public int numberTeams() {
             return this.number;
         }
 
