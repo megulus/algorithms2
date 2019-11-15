@@ -14,11 +14,13 @@ import java.util.HashMap;
 public class BaseballElimination {
     private DivisionData divisionData;
     private FlowNetwork flowNetwork;
+    // private VertexTracker vertexTracker;
 
     // create a baseball division from given filename in format specified below
     public BaseballElimination(String filename) {
         this.divisionData = new DivisionData(filename);
-        this.flowNetwork = new FlowNetwork((this.divisionData.numberOfTeams() * 2) + 2);
+
+        // this.flowNetwork = new FlowNetwork((this.divisionData.numberOfTeams() * 2) + 2);
     }
 
     // number of teams
@@ -46,7 +48,14 @@ public class BaseballElimination {
     // public int against(String team1, String team2) {}
 
     // is given team eliminated?
-    // public boolean isEliminated(String team) {}
+    public boolean isEliminated(String team) {
+        int teamNumber = this.divisionData.allTeams().indexOf(team);
+        Team eliminated = this.divisionData.numberToTeamMap().get(teamNumber);
+        VertexTracker vertexTracker = new VertexTracker(this.divisionData, eliminated);
+
+
+        return false;
+    }
 
     // subset R of teams that eliminates given team; null if not eliminated
     // public Iterable<String> certificateOfElimination(String team) {}
@@ -55,8 +64,6 @@ public class BaseballElimination {
         BaseballElimination be = new BaseballElimination(args[0]);
         int numberOfTeams = be.numberOfTeams();
         StdOut.println("numberOfTeams: " + numberOfTeams);
-        StdOut.println("running DivisionData class printDivisionData() method:");
-        be.divisionData.printDivisionData();
 
 
         // for (String team : division.teams()) {
@@ -72,6 +79,8 @@ public class BaseballElimination {
         //     }
         // }
     }
+
+    // HELPER CLASSES BELOW
 
     enum Type {
         START, GAME, TEAM, END
@@ -97,8 +106,9 @@ public class BaseballElimination {
 
             Vertex v = (Vertex) o;
 
-            return v.type.equals(this.type) && v.team1.equals(this.team1) && v.team2
-                    .equals(this.team2);
+            return v.type.equals(this.type) && ((v.team1.equals(this.team1) && v.team2
+                    .equals(this.team2)) || (v.team1.equals(this.team2) && v.team2
+                    .equals(this.team1)));
         }
 
         @Override
@@ -113,18 +123,100 @@ public class BaseballElimination {
     }
 
     private class VertexTracker {
-        HashMap<Vertex, Integer> VtoI;
-        HashMap<Integer, Vertex> ItoV;
-        int n;
-        int totalVertices;
+        private HashMap<Vertex, Integer> VtoI;
+        private HashMap<Integer, Vertex> ItoV;
+        private int n; // number of teams
+        private int totalVertices;
+        private Team eliminationTeam;
+        private ArrayList<Vertex> allVertices = new ArrayList<>();
+        private DivisionData divisionData;
+        private int currentVertexNumber = 0;
 
-        public VertexTracker(int numberOfTeams) {
-            this.n = numberOfTeams;
-            this.totalVertices = getTotalVertices();
+
+        public VertexTracker(DivisionData divisionData, Team isEliminated) {
+            this.divisionData = divisionData;
+            this.n = this.divisionData.numberOfTeams();
+            this.totalVertices = calculateTotalVertices();
+            this.eliminationTeam = isEliminated;
+            addVertices();
+        }
+
+
+        public void addVertices() {
+            while (this.currentVertexNumber < pascal() + n) {
+
+                if (this.currentVertexNumber == 0) {
+                    Vertex v = new Vertex(0, Type.START, null, null);
+                    allVertices.add(v);
+                    this.currentVertexNumber += 1;
+                }
+
+                if (this.currentVertexNumber >= 1 && this.currentVertexNumber <= pascal()) {
+                    for (int j = 0; j < n; j++) {
+                        for (int k = j + 1; k < n; k++) {
+                            if (isValidMatchup(j, k)) {
+                                Team team1 = this.divisionData.numberToTeamMap().get(j);
+                                Team team2 = this.divisionData.numberToTeamMap().get(k);
+                                allVertices
+                                        .add(new Vertex(this.currentVertexNumber, Type.GAME, team1,
+                                                        team2));
+                                this.currentVertexNumber += 1;
+                            }
+                        }
+                    }
+                }
+
+                if (this.currentVertexNumber >= pascal() + 1
+                        && this.currentVertexNumber <= pascal() + (
+                        n - 1)) {
+                    for (int j = 0; j < n; j++) {
+                        if (j != this.eliminationTeam.number()) {
+                            Team team = this.divisionData.numberToTeamMap().get(j);
+                            allVertices.add(new Vertex(this.currentVertexNumber, Type.TEAM, team,
+                                                       null));
+                            this.currentVertexNumber += 1;
+                        }
+                    }
+                }
+
+                if (this.currentVertexNumber == pascal() + n) {
+                    allVertices.add(new Vertex(this.currentVertexNumber, Type.END, null, null));
+                }
+            }
+        }
+
+        private boolean isValidMatchup(int first, int second) {
+            return first != this.eliminationTeam.number() && second != this.eliminationTeam
+                    .number();
+        }
+
+        private int pascal() {
+            return (((this.n - 1) * (this.n - 2)) / 2);
+        }
+
+        private int calculateTotalVertices() {
+            return pascal() + (this.n - 1) + 2;
         }
 
         public int getTotalVertices() {
-            return (((this.n - 1) * (this.n - 2)) / 2) + (this.n - 1);
+            return this.totalVertices;
+        }
+
+        private void printVertices() {
+            StdOut.println("elimination team: " + this.eliminationTeam.name() + " team number: "
+                                   + this.eliminationTeam.number());
+            for (Vertex v : this.allVertices) {
+                StdOut.println("vertex number: " + v.number + " type: " + v.type);
+                if (v.type == Type.GAME) {
+                    StdOut.println(
+                            "  team1: " + v.team1.number() + " " + v.team1.name() + " team2: "
+                                    + v.team2
+                                    .number() + " " + v.team2.name());
+                }
+                if (v.type == Type.TEAM) {
+                    StdOut.println("  team: " + v.team1.number() + " " + v.team1.name());
+                }
+            }
         }
 
         // translate from vertex to integer
@@ -155,6 +247,10 @@ public class BaseballElimination {
 
         public ArrayList<String> allTeams() {
             return this.allTeams;
+        }
+
+        public HashMap<Integer, Team> numberToTeamMap() {
+            return this.numberToTeamMap;
         }
 
         public int wins(String name) {
