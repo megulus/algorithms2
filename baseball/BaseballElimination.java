@@ -4,12 +4,15 @@
  *  Description:
  **************************************************************************** */
 
+import edu.princeton.cs.algs4.FlowEdge;
 import edu.princeton.cs.algs4.FlowNetwork;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class BaseballElimination {
     private DivisionData divisionData;
@@ -30,7 +33,7 @@ public class BaseballElimination {
 
     // all teams
     public Iterable<String> teams() {
-        return this.divisionData.allTeams();
+        return this.divisionData.teamNames();
     }
 
     // number of wins for given team
@@ -49,35 +52,99 @@ public class BaseballElimination {
 
     // is given team eliminated?
     public boolean isEliminated(String team) {
-        int teamNumber = this.divisionData.allTeams().indexOf(team);
-        Team eliminated = this.divisionData.numberToTeamMap().get(teamNumber);
-        VertexTracker vertexTracker = new VertexTracker(this.divisionData, eliminated);
-
-
+        // before creating a flow network for the team in question,
+        // we first determine whether the team is trivially eliminated:
+        if (isTriviallyEliminated(team)) {
+            StdOut.println(team + " is trivially eliminated");
+            return true;
+        }
+        StdOut.println("flow network for team " + team);
+        FlowNetwork flowNetwork = buildFlowNetwork(team);
+        StdOut.println(flowNetwork.toString());
         return false;
     }
+
+    private boolean isTriviallyEliminated(String teamName) {
+        Team team = this.divisionData.getTeam(teamName);
+        int wx = team.wins();
+        int rx = team.remaining();
+        for (Team i : this.divisionData.opponents(teamName)) {
+            int wi = i.wins();
+            if (wx + rx < wi) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     // subset R of teams that eliminates given team; null if not eliminated
     // public Iterable<String> certificateOfElimination(String team) {}
 
     public static void main(String[] args) {
-        BaseballElimination be = new BaseballElimination(args[0]);
-        int numberOfTeams = be.numberOfTeams();
+        BaseballElimination division = new BaseballElimination(args[0]);
+        int numberOfTeams = division.numberOfTeams();
         StdOut.println("numberOfTeams: " + numberOfTeams);
+        // print all division data
+        // division.divisionData.printDivisionData();
 
 
-        // for (String team : division.teams()) {
-        //     if (division.isEliminated(team)) {
-        //         StdOut.print(team + " is eliminated by the subset R = { ");
-        //         for (String t : division.certificateOfElimination(team)) {
-        //             StdOut.print(t + " ");
-        //         }
-        //         StdOut.println("}");
-        //     }
-        //     else {
-        //         StdOut.println(team + " is not eliminated");
-        //     }
-        // }
+        for (String t : division.teams()) {
+            division.isEliminated(t);
+            // if (division.isEliminated(team)) {
+            //     StdOut.print(team + " is eliminated by the subset R = { ");
+            //     for (String t : division.certificateOfElimination(team)) {
+            //         StdOut.print(t + " ");
+            //     }
+            //     StdOut.println("}");
+            // }
+            // else {
+            //     StdOut.println(team + " is not eliminated");
+            // }
+        }
+    }
+
+    // PRIVATE HELPER METHODS FOR BaseballElimination CLASS
+
+    // build a FlowNetwork for the given elimination team
+    private FlowNetwork buildFlowNetwork(String eliminationTeam) {
+        int teamNumber = this.divisionData.teamNames().indexOf(eliminationTeam);
+        Team eliminated = this.divisionData.numberToTeamMap().get(teamNumber);
+        VertexTracker vertexTracker = new VertexTracker(this.divisionData, eliminated);
+        int totalVertices = vertexTracker.getTotalVertices();
+        Vertex start = vertexTracker.getVerticesByType(Type.START).get(0);
+        Vertex end = vertexTracker.getVerticesByType(Type.END).get(0);
+        List<Vertex> gameVertices = vertexTracker.getVerticesByType(Type.GAME);
+        List<Vertex> teamVertices = vertexTracker.getVerticesByType(Type.TEAM);
+        HashMap<Integer, Vertex> teamNumberToTeamVertexMap = vertexTracker.getTeamVertexMap();
+        FlowNetwork fn = new FlowNetwork(totalVertices);
+        for (Vertex g : gameVertices) {
+            FlowEdge startToGame = new FlowEdge(start.number(), g.number(),
+                                                g.team1().gamesAgainst(g.team2()));
+            // get the two vertices for the game matchup represented by vertex g:
+            Vertex teamVertex1 = teamNumberToTeamVertexMap.get(g.team1().number());
+            Vertex teamVertex2 = teamNumberToTeamVertexMap.get(g.team2().number());
+            FlowEdge gameToTeam1 = new FlowEdge(g.number(), teamVertex1.number(),
+                                                Double.POSITIVE_INFINITY);
+            FlowEdge gameToTeam2 = new FlowEdge(g.number(), teamVertex2.number(),
+                                                Double.POSITIVE_INFINITY);
+            fn.addEdge(startToGame);
+            fn.addEdge(gameToTeam1);
+            fn.addEdge(gameToTeam2);
+        }
+        // add FlowEdge from each team vertex (w) to end vertex (t)
+        int wx = eliminated.wins();
+        int rx = eliminated.remaining();
+        for (Vertex i : teamVertices) {
+            int wi = i.team1().wins();
+            // capacity, = Wx + Rx - Wi, where x = elimination team
+            StdOut.println("wins x: " + wx + " remaining x: " + rx + " wins i: " + wi);
+            double capacity = wx + rx - wi;
+            StdOut.println("capacity " + capacity);
+            FlowEdge teamToEnd = new FlowEdge(i.number(), end.number(), capacity);
+            fn.addEdge(teamToEnd);
+        }
+        return fn;
     }
 
     // HELPER CLASSES BELOW
@@ -97,6 +164,22 @@ public class BaseballElimination {
             this.type = type;
             if (team1 != null) this.team1 = team1;
             if (team2 != null) this.team2 = team2;
+        }
+
+        public int number() {
+            return this.number;
+        }
+
+        public Type type() {
+            return this.type;
+        }
+
+        public Team team1() {
+            return this.team1;
+        }
+
+        public Team team2() {
+            return this.team2;
         }
 
         @Override
@@ -131,6 +214,7 @@ public class BaseballElimination {
         private ArrayList<Vertex> allVertices = new ArrayList<>();
         private DivisionData divisionData;
         private int currentVertexNumber = 0;
+        private HashMap<Integer, Vertex> teamVertexMap = new HashMap<>();
 
 
         public VertexTracker(DivisionData divisionData, Team isEliminated) {
@@ -146,8 +230,7 @@ public class BaseballElimination {
             while (this.currentVertexNumber < pascal() + n) {
 
                 if (this.currentVertexNumber == 0) {
-                    Vertex v = new Vertex(0, Type.START, null, null);
-                    allVertices.add(v);
+                    allVertices.add(new Vertex(0, Type.START, null, null));
                     this.currentVertexNumber += 1;
                 }
 
@@ -172,8 +255,10 @@ public class BaseballElimination {
                     for (int j = 0; j < n; j++) {
                         if (j != this.eliminationTeam.number()) {
                             Team team = this.divisionData.numberToTeamMap().get(j);
-                            allVertices.add(new Vertex(this.currentVertexNumber, Type.TEAM, team,
-                                                       null));
+                            Vertex t = new Vertex(this.currentVertexNumber, Type.TEAM, team,
+                                                  null);
+                            allVertices.add(t);
+                            teamVertexMap.put(team.number(), t);
                             this.currentVertexNumber += 1;
                         }
                     }
@@ -183,6 +268,26 @@ public class BaseballElimination {
                     allVertices.add(new Vertex(this.currentVertexNumber, Type.END, null, null));
                 }
             }
+        }
+
+        // TODO: is there a way to make this immutable?
+        public HashMap<Integer, Vertex> getTeamVertexMap() {
+            return this.teamVertexMap;
+        }
+
+        // get vertices by type
+        public List<Vertex> getVerticesByType(Type type) {
+            ArrayList<Vertex> subset = new ArrayList<>();
+            for (Vertex v : this.allVertices) {
+                if (v.type == type) {
+                    subset.add(v);
+                }
+            }
+            return Collections.unmodifiableList(subset);
+        }
+
+        public List<Vertex> getAllVertices() {
+            return Collections.unmodifiableList(this.allVertices);
         }
 
         private boolean isValidMatchup(int first, int second) {
@@ -227,7 +332,8 @@ public class BaseballElimination {
     private class DivisionData {
         private int numTeams;
         private ArrayList<String> allTeams = new ArrayList<>();
-        private HashMap<Integer, Team> numberToTeamMap = new HashMap<>();
+        private HashMap<Integer, Team> teamNumberToTeamMap = new HashMap<>();
+        private HashMap<String, Integer> teamNameToNumberMap = new HashMap<>();
 
         public DivisionData(String filename) {
             In in = new In(filename);
@@ -236,7 +342,8 @@ public class BaseballElimination {
             while (!in.isEmpty()) {
                 String[] line = in.readLine().split("\\s+");
                 this.allTeams.add(line[0]);
-                this.numberToTeamMap.put(teamNumber, new Team(teamNumber, line, this.numTeams));
+                this.teamNumberToTeamMap.put(teamNumber, new Team(teamNumber, line, this.numTeams));
+                this.teamNameToNumberMap.put(line[0], teamNumber);
                 teamNumber++;
             }
         }
@@ -245,29 +352,48 @@ public class BaseballElimination {
             return this.numTeams;
         }
 
-        public ArrayList<String> allTeams() {
+        public ArrayList<String> teamNames() {
             return this.allTeams;
         }
 
         public HashMap<Integer, Team> numberToTeamMap() {
-            return this.numberToTeamMap;
+            return this.teamNumberToTeamMap;
+        }
+
+        public int getTeamNumber(String teamName) {
+            return this.teamNameToNumberMap.get(teamName);
+        }
+
+        public Team getTeam(String teamName) {
+            int teamNumber = this.teamNameToNumberMap.get(teamName);
+            return this.teamNumberToTeamMap.get(teamNumber);
+        }
+
+        public ArrayList<Team> opponents(String teamName) {
+            ArrayList<Team> opponents = new ArrayList<>();
+            for (String name : this.allTeams) {
+                if (name != teamName) {
+                    opponents.add(this.getTeam(name));
+                }
+            }
+            return opponents;
         }
 
         public int wins(String name) {
-            Team team = numberToTeamMap.get(this.allTeams.indexOf(name));
+            Team team = teamNumberToTeamMap.get(this.allTeams.indexOf(name));
             return team.wins();
         }
 
-        private void printDivisionData() {
+        public void printDivisionData() {
             for (int i = 0; i < this.allTeams.size(); i++) {
-                Team team = this.numberToTeamMap.get(i);
+                Team team = this.teamNumberToTeamMap.get(i);
                 StdOut.println(
                         " team name: " + team.name() + " wins: " + team.wins() + " losses: " + team
                                 .losses());
                 StdOut.println("  games remaining against: ");
                 for (int j = 0; j < this.allTeams.size(); j++) {
-                    String opponent = this.allTeams.get(j);
-                    StdOut.println("   " + opponent + ": " + team.gamesAgainst(j));
+                    Team opponent = this.teamNumberToTeamMap.get(j);
+                    StdOut.println("   " + opponent.name() + ": " + team.gamesAgainst(opponent));
                 }
                 StdOut.println();
             }
@@ -316,7 +442,8 @@ public class BaseballElimination {
             return this.remaining;
         }
 
-        public int gamesAgainst(int teamNumber) {
+        public int gamesAgainst(Team team) {
+            int teamNumber = team.number();
             return this.remainingAgainst.get(teamNumber);
         }
     }
