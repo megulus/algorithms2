@@ -13,28 +13,28 @@ import edu.princeton.cs.algs4.StdOut;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class BaseballElimination {
     private final DivisionData divisionData;
-    private final HashMap<String, VertexTracker> teamVertexTracker = new HashMap<>();
-    private final HashMap<String, FordFulkerson> teamFordFulkerson = new HashMap<>();
-    private final HashMap<String, Boolean> triviallyEliminated = new HashMap<>();
-    private final HashMap<String, ArrayList<String>> eliminationSets = new HashMap<>();
+    private final Set<String> triviallyEliminated = new HashSet<>();
+    private final Map<String, ArrayList<String>> eliminationSets = new HashMap<>();
 
 
     // create a baseball division from given filename in format specified below
     public BaseballElimination(String filename) {
         this.divisionData = new DivisionData(filename);
-        ArrayList<String> allTeamNames = this.divisionData.teamNames();
+        List<String> allTeamNames = this.divisionData.teamNames();
         for (String teamName : allTeamNames) {
             if (!isTriviallyEliminated(teamName)) {
-                triviallyEliminated.put(teamName, false);
                 buildFlowNetwork(teamName);
             }
             else {
-                triviallyEliminated.put(teamName, true);
-                calculateEliminationSet(teamName);
+                triviallyEliminated.add(teamName);
+                calculateEliminationSet(teamName, null, null);
             }
         }
     }
@@ -91,7 +91,7 @@ public class BaseballElimination {
         if (!this.divisionData.teamNames().contains(teamName)) {
             throw new IllegalArgumentException("Invalid team name");
         }
-        boolean isTriviallyEliminated = this.triviallyEliminated.get(teamName);
+        boolean isTriviallyEliminated = this.triviallyEliminated.contains(teamName);
         if (isTriviallyEliminated) {
             return true;
         }
@@ -153,13 +153,14 @@ public class BaseballElimination {
         return false;
     }
 
-    private void calculateEliminationSet(String teamName) {
-        boolean isTriviallyEliminated = this.triviallyEliminated.get(teamName);
+    private void calculateEliminationSet(String teamName, FordFulkerson fordFulkerson,
+                                         VertexTracker vertexTracker) {
+        boolean isTriviallyEliminated = this.triviallyEliminated.contains(teamName);
         if (isTriviallyEliminated) {
             calculateTrivialEliminationSet(teamName);
         }
         else {
-            calculateFordFulkersonEliminationSet(teamName);
+            calculateFordFulkersonEliminationSet(teamName, fordFulkerson, vertexTracker);
         }
     }
 
@@ -180,9 +181,8 @@ public class BaseballElimination {
 
     }
 
-    private void calculateFordFulkersonEliminationSet(String teamName) {
-        FordFulkerson fordFulkerson = this.teamFordFulkerson.get(teamName);
-        VertexTracker vertexTracker = this.teamVertexTracker.get(teamName);
+    private void calculateFordFulkersonEliminationSet(String teamName, FordFulkerson fordFulkerson,
+                                                      VertexTracker vertexTracker) {
         List<Vertex> teamVertices = vertexTracker.getVerticesByType(Type.TEAM);
         ArrayList<String> mincut = new ArrayList<>();
         for (Vertex v : teamVertices) {
@@ -225,7 +225,6 @@ public class BaseballElimination {
         int teamNumber = this.divisionData.teamNames().indexOf(eliminationTeam);
         Team eliminated = this.divisionData.numberToTeamMap().get(teamNumber);
         VertexTracker vertexTracker = new VertexTracker(this.divisionData, eliminated);
-        this.teamVertexTracker.put(eliminationTeam, vertexTracker);
         int totalVertices = vertexTracker.getTotalVertices();
         Vertex start = vertexTracker.getVerticesByType(Type.START).get(0);
         Vertex end = vertexTracker.getVerticesByType(Type.END).get(0);
@@ -258,8 +257,7 @@ public class BaseballElimination {
             fn.addEdge(teamToEnd);
         }
         FordFulkerson ff = new FordFulkerson(fn, start.number(), end.number());
-        this.teamFordFulkerson.put(eliminationTeam, ff);
-        calculateEliminationSet(eliminationTeam);
+        calculateEliminationSet(eliminationTeam, ff, vertexTracker);
     }
 
     // HELPER CLASSES BELOW
@@ -416,9 +414,9 @@ public class BaseballElimination {
 
     private class DivisionData {
         private final int numTeams;
-        private final ArrayList<String> allTeams = new ArrayList<>();
-        private final HashMap<Integer, Team> teamNumberToTeamMap = new HashMap<>();
-        private final HashMap<String, Integer> teamNameToNumberMap = new HashMap<>();
+        private final List<String> allTeams = new ArrayList<>();
+        private final Map<Integer, Team> teamNumberToTeamMap = new HashMap<>();
+        private final Map<String, Integer> teamNameToNumberMap = new HashMap<>();
 
         public DivisionData(String filename) {
             In in = new In(filename);
@@ -440,11 +438,11 @@ public class BaseballElimination {
             return this.numTeams;
         }
 
-        public ArrayList<String> teamNames() {
+        public List<String> teamNames() {
             return this.allTeams;
         }
 
-        public HashMap<Integer, Team> numberToTeamMap() {
+        public Map<Integer, Team> numberToTeamMap() {
             return this.teamNumberToTeamMap;
         }
 
@@ -457,7 +455,7 @@ public class BaseballElimination {
             return this.teamNumberToTeamMap.get(teamNumber);
         }
 
-        public ArrayList<Team> opponents(String teamName) {
+        public List<Team> opponents(String teamName) {
             ArrayList<Team> opponents = new ArrayList<>();
             for (String name : this.allTeams) {
                 if (!name.equals(teamName)) {
@@ -480,7 +478,7 @@ public class BaseballElimination {
         private final int wins;
         private final int losses;
         private final int remaining;
-        private final HashMap<Integer, Integer> remainingAgainst = new HashMap<>();
+        private final Map<Integer, Integer> remainingAgainst = new HashMap<>();
 
         public Team(int number, String[] line, int numTeams) {
             this.name = line[0];
